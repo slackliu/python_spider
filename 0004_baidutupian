@@ -1,0 +1,82 @@
+import requests
+from urllib.error import URLError
+import os
+import urllib
+from urllib.parse import urlencode
+headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36'}
+
+
+def get_page(offset):
+#解析网页
+    params = {
+        'pn': offset,
+        'rn': 30,
+        'gsm': str(hex(offset))}
+    url = 'https://image.baidu.com/search/acjson?tn=resultjson_com&ipn=rj&ct=201326592&is=&fp=result&queryWord=%E8%A1%97%E6%8B%8D&cl=&lm=&ie=utf-8&oe=utf-8&adpicid=&st=&z=&ic=&hd=&latest=&copyright=&word=%E8%A1%97%E6%8B%8D&s=&se=&tab=&width=&height=&face=&istype=&qc=&nc=&fr=&expermode=&selected_tags=' + urlencode(
+        params)
+    try:
+        request = requests.get(url, headers=headers)
+        if request.status_code == 200:
+            return request.json()
+    except:
+        return None
+
+
+def decry(a):
+#解密图片网址,解密此时不需要看，有专门的方法
+    str_table = {
+        '_z2C$q': ':',
+        '_z&e3B': '.',
+        'AzdH3F': '/', }
+    in_table = '0123456789abcdefghijklmnopqrstuvw'
+    out_table = '7dgjmoru140852vsnkheb963wtqplifca'
+    char_table = str.maketrans(in_table, out_table)
+    if True:
+        for key, value in str_table.items():
+            a = a.replace(key, value)
+        a = a.translate(char_table)
+        return a
+
+
+def get_img(json):
+#获取图片网址
+    data = json.get('data')
+    m = 1
+    if data:
+        for item in data:
+            try:
+                if item.get('objURL'):
+                    image = decry(item.get('objURL'))
+                    title = str(m)
+                    yield{
+                        'image': image,
+                        'title': title, }
+                    m += 1
+            except URLError as e:
+                print(e.reason)
+
+
+def save_img(item):
+#保存图片
+    path = os.path.join("./mypic/", item.get('title'))
+    if not os.path.exists(path):
+        os.makedirs(path)
+    local_image_url = item.get('image')
+    if local_image_url:
+        save_pic = path + "/" + local_image_url.split('/').pop(2)+".jpg"
+        urllib.request.urlretrieve(local_image_url, save_pic)
+
+
+def main(offset):
+    json = get_page(offset)
+    for item in get_img(json):
+        print(item)
+        save_img(item)
+
+
+if __name__ == '__main__':
+    for i in range(1, 3):
+        j = i * 30
+        main(offset=j)
+
+
