@@ -1,0 +1,48 @@
+import requests
+import bs4
+
+headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                         "Chrome/70.0.3538.110 Safari/537.36"}
+
+url = "http://dianying.2345.com/top/"
+
+
+def get_page(url):
+    try:
+        response = requests.get(url, headers=headers)
+        response.encoding = "gbk"
+        return response.text
+    except:
+        return "something wrong"
+
+
+def html_parse(url):
+    html = get_page(url)
+    soup = bs4.BeautifulSoup(html, "lxml")
+    movies_list = soup.find('ul', class_= "picList clearfix")
+    movies = movies_list.find_all('li')
+    for top  in movies:
+        img_url = "http:" + top.find('img')["src"]
+        print(img_url)
+        name = top.find('span', class_="sTit").a.text
+        try:
+            time = top.find('span', class_='sIntro').text
+        except:
+            time = "暂无上映时间"
+        actors = top.find('p', class_="pActor")
+        actor = ''
+        for act in actors.contents:
+            actor = actor + act.string + ""
+        intro = top.find('p', class_="pTxt pIntroShow").text
+        print("片名：{}\t{}\n{}\n{} \n \n".format(name, time, actor, intro))
+
+        with open('E:\python\wenjian\spider\images\\'+ str(name) +'.png', 'wb+') as f:
+            f.write(requests.get(img_url).content)
+
+
+def main():
+    html_parse(url)
+
+
+if __name__ == "__main__":
+    main()
