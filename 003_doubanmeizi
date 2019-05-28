@@ -1,0 +1,42 @@
+import urllib.request
+import bs4
+import urllib.error
+
+headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"}
+
+
+def get_html(url):
+    request = urllib.request.Request(url, headers=headers)
+    response = urllib.request.urlopen(request)
+    html = response.read().decode("utf-8")
+    return html
+
+
+j = 0
+
+
+def html_parse(html):
+    global j
+    soup = bs4.BeautifulSoup(html, "lxml")
+    pic_lists = soup.find('ul', attrs={"class": "thumbnails"})
+    pic_list = pic_lists.find_all('li')
+
+    for pics in pic_list:
+        pic_url = pics.find('img')['src']
+        urllib.request.urlretrieve(pic_url, "D:\工作\python\网络爬虫开发实战\images\%s.jpg" % j)
+        j += 1
+
+
+def main():
+    i = 1
+    while i < 4:
+        url = "https://www.dbmeinv.com/?pager_offset=" + str(i)
+        html = get_html(url)
+        html_parse(html)
+        i += 1
+
+
+if __name__ == "__main__":
+    main()
+
+
