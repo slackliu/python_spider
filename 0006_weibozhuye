@@ -1,0 +1,61 @@
+from urllib.error import URLError
+import urllib.request
+import json
+
+id='1259110474'
+headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                         "Chrome/70.0.3538.110 Safari/537.36"}
+url = 'https://m.weibo.cn/api/container/getIndex?type=uid&value='+id
+
+
+def get_page(url):
+    try:
+        request = urllib.request.Request(url, headers=headers)
+        response = urllib.request.urlopen(request)
+        html = response.read().decode('utf-8', 'ignore')
+        # print(html)
+        return html
+    except URLError as e:
+        print(e.reason)
+
+
+def get_content(html):
+    contents = json.loads(html).get('data')
+    for data in contents.get('tabsInfo').get('tabs'):
+        if (data.get('tab_type')=='weibo'):
+            containID = data.get('containerid')
+            return containID
+
+
+def get_userInfo(html):
+    contents = json.loads(html).get('data')
+    content = contents.get('userInfo')
+    profile_image_url = content.get('profile_image_url')
+    description = content.get('description')
+    profile_url = content.get('profile_url')
+    guanzhu = content.get('follow_count')
+    name = content.get('screen_name')
+    fensi = content.get('followers_count')
+    urank = content.get('urank')
+    print('微博名称:' + name)
+    print('图像地址：' + profile_image_url)
+
+    if description == None:
+        print('暂无描述')
+    else:
+        print('描述：' + description)
+    print('微博主页：' + profile_url)
+    print('关注人数:' + str(guanzhu))
+    print('粉丝数量:' + str(fensi))
+    print('微博等级:' + str(urank))
+
+
+def main():
+    html = get_page(url)
+    get_content(html)
+    get_userInfo(html)
+
+
+if __name__ == "__main__":
+    main()
+
